@@ -126,11 +126,11 @@ td.na{color:var(--muted)}
 </style>
 
 <div class="mast"><div class="mast-in">
-  <div><h1>BioVana Data Explorer</h1><p>Browse the biospecimen and clinical variables available across BioVana studies: BioAtlas, PROS and ACENTDFB</p></div>
+  <div><h1>BioVana Data Explorer</h1><p>Browse the biospecimen and clinical variables available across BioVana studies</p></div>
   <span class="sp"></span>
   <button class="btn fbtn" id="openF" style="background:var(--surface);color:var(--ink)">Filters</button>
 </div></div>
-<div class="banner"><div><b>Synthetic demonstration data.</b> Every record shown here is generated from the aggregate structure of the BioAtlas, PROS and ACENTDFB source data. None describes a real participant or sample. Use it to see which variables exist and how they can be combined, not for analysis.</div></div>
+<div class="banner"><div><b>Synthetic demonstration data.</b> Every record shown here is generated from the aggregate structure of the source datasets. None describes a real participant or sample. Use it to see which variables exist and how they can be combined, not for analysis.</div></div>
 
 <div class="wrap">
   <aside class="rail" id="rail" aria-label="Filters">
@@ -301,7 +301,7 @@ function histo(m){
   s+='</svg><div class="legend">'+cats.map(function(cn){return '<span><i style="background:var('+CATC[cn]+')"></i>'+esc(cn)+'</span>'}).join('')+'</div>';
   return '<div class="ch wide"><h3>Age and disease category<span>'+(unit==='P'?'participants':'samples')+' · '+n.toLocaleString()+' with a recorded age</span></h3>'+s+'</div>'}
 function charts(m){
-  $('charts').innerHTML=bars('Study','Study',m,6)+bars('Nature of study','Nature of Study',m,4)+bars('Target organism','Target Organism',m,6)+bars('Disease category','Disease Category',m,6,function(l){return CATC[l]})+bars('Study site','Study Site',m,8)+bars('Sample type','Sample Type',m,10)+bars('Sex','Sex',m,3)+bars('Diagnosis','Diagnosis',m,10)+bars('Ethnicity','Ethnicity',m,10)+bars('ISSVA classification','ISSVA Classification',m,8)+bars('Anatomical site (tissue)','Anatomical Site',m,8)+histo(m)}
+  $('charts').innerHTML=bars('Study','Study',m,6)+bars('Target organism','Target Organism',m,6)+bars('Disease category','Disease Category',m,6,function(l){return CATC[l]})+bars('Study site','Study Site',m,8)+bars('Sample type','Sample Type',m,10)+bars('Sex','Sex',m,3)+bars('Diagnosis','Diagnosis',m,10)+bars('Ethnicity','Ethnicity',m,10)+bars('ISSVA classification','ISSVA Classification',m,8)+bars('Anatomical site (tissue)','Anatomical Site',m,8)+histo(m)}
 
 /* ---------- table ---------- */
 function visibleCols(){return cols.filter(function(c){return shown.indexOf(c.name)>=0})}
