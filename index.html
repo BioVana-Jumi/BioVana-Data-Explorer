@@ -7,19 +7,19 @@
 :root{
   --bg:#F4F7F8; --surface:#FFFFFF; --ink:#1F3B4D; --muted:#566B7A; --line:#DAE3E8; --hover:#EAF2F4;
   --hdr:#1F3B4D; --hdr-ink:#FFFFFF; --accent:#0E7C7B; --accent-soft:#D9F0EF; --accent-ink:#FFFFFF; --bar:#13A3A1;
-  --c-can:#D9503F; --c-cvd:#13A3A1; --c-met:#E39A22; --c-aid:#7A5AA6; --c-ntd:#5B7C99; --c-vas:#3B6FD4;
+  --c-can:#D9503F; --c-cvd:#13A3A1; --c-met:#E39A22; --c-aid:#7A5AA6; --c-ntd:#5B7C99; --c-vas:#3B6FD4; --c-inf:#C2418B;
   --warn-bg:#FFF4DE; --warn-ink:#6B4A00;
   --font:"DM Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0E1A21; --surface:#15252F; --ink:#E5EEF2; --muted:#98ACB8; --line:#273C48; --hover:#1C313D;
   --hdr:#12222B; --hdr-ink:#F2F7F9; --accent:#3CC9C6; --accent-soft:#16413F; --accent-ink:#06201F; --bar:#2FB9B6;
-  --c-can:#F0715F; --c-cvd:#3CC9C6; --c-met:#F2B04A; --c-aid:#A58AD0; --c-ntd:#8CA9C2; --c-vas:#6E9BF0;
+  --c-can:#F0715F; --c-cvd:#3CC9C6; --c-met:#F2B04A; --c-aid:#A58AD0; --c-ntd:#8CA9C2; --c-vas:#6E9BF0; --c-inf:#E37DB5;
   --warn-bg:#3A2F12; --warn-ink:#F4D58D; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0E1A21; --surface:#15252F; --ink:#E5EEF2; --muted:#98ACB8; --line:#273C48; --hover:#1C313D;
   --hdr:#12222B; --hdr-ink:#F2F7F9; --accent:#3CC9C6; --accent-soft:#16413F; --accent-ink:#06201F; --bar:#2FB9B6;
-  --c-can:#F0715F; --c-cvd:#3CC9C6; --c-met:#F2B04A; --c-aid:#A58AD0; --c-ntd:#8CA9C2; --c-vas:#6E9BF0;
+  --c-can:#F0715F; --c-cvd:#3CC9C6; --c-met:#F2B04A; --c-aid:#A58AD0; --c-ntd:#8CA9C2; --c-vas:#6E9BF0; --c-inf:#E37DB5;
   --warn-bg:#3A2F12; --warn-ink:#F4D58D; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.45}
@@ -126,11 +126,11 @@ td.na{color:var(--muted)}
 </style>
 
 <div class="mast"><div class="mast-in">
-  <div><h1>BioVana Data Explorer</h1><p>Browse the biospecimen and clinical variables available across BioVana studies: BioAtlas and PROS</p></div>
+  <div><h1>BioVana Data Explorer</h1><p>Browse the biospecimen and clinical variables available across BioVana studies: BioAtlas, PROS and ACENTDFB</p></div>
   <span class="sp"></span>
   <button class="btn fbtn" id="openF" style="background:var(--surface);color:var(--ink)">Filters</button>
 </div></div>
-<div class="banner"><div><b>Synthetic demonstration data.</b> Every record shown here is generated from the aggregate structure of the BioAtlas and PROS cohorts. None describes a real participant or sample. Use it to see which variables exist and how they can be combined, not for analysis.</div></div>
+<div class="banner"><div><b>Synthetic demonstration data.</b> Every record shown here is generated from the aggregate structure of the BioAtlas, PROS and ACENTDFB source data. None describes a real participant or sample. Use it to see which variables exist and how they can be combined, not for analysis.</div></div>
 
 <div class="wrap">
   <aside class="rail" id="rail" aria-label="Filters">
@@ -168,8 +168,8 @@ td.na{color:var(--muted)}
 <script>
 (function(){
 var D,N,cols=[],byName={},sel={},rng={},txt={},Q='',unit='S',page=0,PS=25,sortCol=null,sortDir=1,blob=[],pidCol,catCol,sCat;
-var shown=['Sample ID','Study Site','Disease Category','Sample Type','Sample Category','Sex','Age','Diagnosis','Ethnicity','Collection Date'];
-var CATC={'Cancer':'--c-can','Cardiovascular':'--c-cvd','Metabolic':'--c-met','Autoimmune':'--c-aid','Neglected tropical disease':'--c-ntd','Vascular anomalies':'--c-vas'};
+var shown=['Sample ID','Study','Study Site','Disease Category','Sample Type','Sample Category','Sex','Age','Diagnosis','Ethnicity','Collection Date'];
+var CATC={'Cancer':'--c-can','Cardiovascular':'--c-cvd','Metabolic':'--c-met','Autoimmune':'--c-aid','Neglected tropical disease':'--c-ntd','Vascular anomalies':'--c-vas','Infectious disease':'--c-inf'};
 var $=function(i){return document.getElementById(i)};
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function dstr(d){return new Date(d*864e5).toISOString().slice(0,10)}
@@ -203,7 +203,7 @@ function mask(skip){
 function countCat(c,m){
   var n=c.dict.length+1,out=new Array(n).fill(0),seen=unit==='P'?Array.from({length:n},function(){return new Set()}):null;
   for(var i=0;i<N;i++){if(!m[i])continue;var v=c.v[i];var b=v<0?n-1:v;
-    if(seen){seen[b].add(pidCol.v[i])}else out[b]++}
+    if(seen){if(pidCol.v[i]!==null)seen[b].add(pidCol.v[i])}else out[b]++}
   if(seen)seen.forEach(function(s,i){out[i]=s.size});return out}
 
 /* ---------- sidebar ---------- */
@@ -270,10 +270,10 @@ function updateFacets(){
 
 /* ---------- summary ---------- */
 function kpis(m){
-  var all=new Set(),cur=new Set(),prim=0,der=0,sites=new Set(),tot=N,pAll=new Set(pidCol.v),pc=sCat.dict.indexOf('Primary');
+  var all=new Set(),cur=new Set(),prim=0,der=0,sites=new Set(),tot=N,pAll=new Set(pidCol.v.filter(function(x){return x!==null})),pc=sCat.dict.indexOf('Primary');
   var site=byName['Study Site'];
-  for(var i=0;i<N;i++){if(!m[i])continue;cur.add(pidCol.v[i]);sites.add(site.v[i]);if(sCat.v[i]===pc)prim++;else der++}
-  var items=[['Participants',cur.size,'of '+pAll.size.toLocaleString()],['Samples',prim+der,'of '+N.toLocaleString()],['Primary samples',prim,'blood, urine, saliva, tissue and others'],['Derived samples',der,'plasma and serum aliquots'],['Sites',sites.size,'of '+site.dict.length]];
+  for(var i=0;i<N;i++){if(!m[i])continue;if(pidCol.v[i]!==null)cur.add(pidCol.v[i]);if(site.v[i]>=0)sites.add(site.v[i]);if(sCat.v[i]===pc)prim++;else der++}
+  var items=[['Participants',cur.size,'of '+pAll.size.toLocaleString()],['Samples',prim+der,'of '+N.toLocaleString()],['Primary samples',prim,'blood, urine, saliva, tissue and others'],['Derived samples',der,'plasma, serum, DNA and cDNA'],['Sites',sites.size,'of '+site.dict.length]];
   $('kpis').innerHTML=items.map(function(x){return '<div class="kpi"><div class="v">'+x[1].toLocaleString()+'</div><div class="l">'+x[0]+'</div><div class="o">'+x[2]+'</div></div>'}).join('');
   $('shown').textContent=(prim+der).toLocaleString()+' samples from '+cur.size.toLocaleString()+' participants match'}
 function counts(name,m){var c=byName[name],a=countCat(c,m);return c.dict.map(function(l,i){return{label:l,count:a[i],code:i}}).filter(function(x){return x.count>0}).sort(function(a,b){return b.count-a.count})}
@@ -288,7 +288,7 @@ function bars(title,name,m,limit,colorFn){
 function histo(m){
   var age=byName['Age'],bins=[[0,17],[18,29],[30,39],[40,49],[50,59],[60,69],[70,79],[80,120]],cats=catCol.dict,grid=bins.map(function(){return cats.map(function(){return unit==='P'?new Set():0})}),n=0;
   for(var i=0;i<N;i++){if(!m[i]||age.v[i]===null)continue;var a=age.v[i],b=bins.findIndex(function(x){return a>=x[0]&&a<=x[1]});if(b<0)continue;var k=catCol.v[i];if(k<0)continue;n++;
-    if(unit==='P')grid[b][k].add(pidCol.v[i]);else grid[b][k]++}
+    if(unit==='P'){if(pidCol.v[i]!==null)grid[b][k].add(pidCol.v[i])}else grid[b][k]++}
   var tot=grid.map(function(r){return r.map(function(x){return unit==='P'?x.size:x})}),sums=tot.map(function(r){return r.reduce(function(a,b){return a+b},0)}),max=Math.max.apply(null,sums.concat([1]));
   var step=Math.pow(10,Math.floor(Math.log10(max)));var top=Math.ceil(max/step)*step;if(top/step<2)top=step*2;
   var W=560,H=210,L=36,B=26,T=8,pw=(W-L-6)/bins.length,bw=pw*.62,sy=function(v){return H-B-(H-B-T)*v/top};
@@ -301,7 +301,7 @@ function histo(m){
   s+='</svg><div class="legend">'+cats.map(function(cn){return '<span><i style="background:var('+CATC[cn]+')"></i>'+esc(cn)+'</span>'}).join('')+'</div>';
   return '<div class="ch wide"><h3>Age and disease category<span>'+(unit==='P'?'participants':'samples')+' · '+n.toLocaleString()+' with a recorded age</span></h3>'+s+'</div>'}
 function charts(m){
-  $('charts').innerHTML=bars('Study','Study',m,6)+bars('Disease category','Disease Category',m,6,function(l){return CATC[l]})+bars('Study site','Study Site',m,8)+bars('Sample type','Sample Type',m,10)+bars('Sex','Sex',m,3)+bars('Diagnosis','Diagnosis',m,10)+bars('Ethnicity','Ethnicity',m,10)+bars('ISSVA classification','ISSVA Classification',m,8)+bars('Anatomical site (tissue)','Anatomical Site',m,8)+histo(m)}
+  $('charts').innerHTML=bars('Study','Study',m,6)+bars('Nature of study','Nature of Study',m,4)+bars('Target organism','Target Organism',m,6)+bars('Disease category','Disease Category',m,6,function(l){return CATC[l]})+bars('Study site','Study Site',m,8)+bars('Sample type','Sample Type',m,10)+bars('Sex','Sex',m,3)+bars('Diagnosis','Diagnosis',m,10)+bars('Ethnicity','Ethnicity',m,10)+bars('ISSVA classification','ISSVA Classification',m,8)+bars('Anatomical site (tissue)','Anatomical Site',m,8)+histo(m)}
 
 /* ---------- table ---------- */
 function visibleCols(){return cols.filter(function(c){return shown.indexOf(c.name)>=0})}
@@ -342,10 +342,10 @@ function update(){
 /* ---------- detail drawer ---------- */
 function openRec(i){
   var g={},order=[];cols.forEach(function(c){if(!g[c.group]){g[c.group]=[];order.push(c.group)}g[c.group].push(c)});
-  var pid=pidCol.v[i],sibs=[];for(var k=0;k<N;k++)if(pidCol.v[k]===pid)sibs.push(k);
+  var pid=pidCol.v[i],sibs=[];if(pid===null)sibs=[i];else for(var k=0;k<N;k++)if(pidCol.v[k]===pid)sibs.push(k);
   var h='<button class="btn close" id="dc">Close</button><h2>'+esc(fmt(byName['Sample ID'],i))+'</h2><div style="color:var(--muted)">'+esc(fmt(byName['Sample Type'],i))+' · '+esc(fmt(byName['Sample Category'],i))+' · '+esc(fmt(byName['Study Site'],i))+'</div>';
   order.forEach(function(gn){h+='<h3>'+esc(gn)+'</h3><dl>'+g[gn].map(function(c){var v=fmt(c,i);return '<dt>'+esc(c.name)+'</dt><dd>'+(v?esc(v):'<span style="color:var(--muted)">–</span>')+'</dd>'}).join('')+'</dl>'});
-  h+='<h3>All samples from this participant ('+sibs.length+')</h3><div class="smp">'+sibs.map(function(k){return '<button data-o="'+k+'">'+esc(fmt(byName['Sample ID'],k).split('_').slice(-1)[0])+' · '+esc(fmt(byName['Sample Type'],k))+'</button>'}).join('')+'</div>';
+  h+='<h3>'+(pid===null?'This sample, no participant ID (':'All samples from this participant (')+sibs.length+')</h3><div class="smp">'+sibs.map(function(k){return '<button data-o="'+k+'">'+esc(fmt(byName['Sample ID'],k).split('_').slice(-1)[0])+' · '+esc(fmt(byName['Sample Type'],k))+'</button>'}).join('')+'</div>';
   var d=$('drawer');d.innerHTML=h;d.hidden=false;d.scrollTop=0;$('dc').focus()}
 
 /* ---------- events ---------- */
