@@ -344,7 +344,7 @@ function openRec(i){
   var g={},order=[];cols.forEach(function(c){if(!g[c.group]){g[c.group]=[];order.push(c.group)}g[c.group].push(c)});
   var pid=pidCol.v[i],sibs=[];if(pid===null)sibs=[i];else for(var k=0;k<N;k++)if(pidCol.v[k]===pid)sibs.push(k);
   var h='<button class="btn close" id="dc">Close</button><h2>'+esc(fmt(byName['Sample ID'],i))+'</h2><div style="color:var(--muted)">'+esc(fmt(byName['Sample Type'],i))+' · '+esc(fmt(byName['Sample Category'],i))+' · '+esc(fmt(byName['Study Site'],i))+'</div>';
-  order.forEach(function(gn){h+='<h3>'+esc(gn)+'</h3><dl>'+g[gn].map(function(c){var v=fmt(c,i);return '<dt>'+esc(c.name)+'</dt><dd>'+(v?esc(v):'<span style="color:var(--muted)">–</span>')+'</dd>'}).join('')+'</dl>'});
+  order.forEach(function(gn){if(/^Genotyping: /.test(gn)&&!g[gn].some(function(c){return fmt(c,i)}))return;h+='<h3>'+esc(gn)+'</h3><dl>'+g[gn].map(function(c){var v=fmt(c,i);return '<dt>'+esc(c.name)+'</dt><dd>'+(v?esc(v):'<span style="color:var(--muted)">–</span>')+'</dd>'}).join('')+'</dl>'});
   h+='<h3>'+(pid===null?'This sample, no participant ID (':'All samples from this participant (')+sibs.length+')</h3><div class="smp">'+sibs.map(function(k){return '<button data-o="'+k+'">'+esc(fmt(byName['Sample ID'],k).split('_').slice(-1)[0])+' · '+esc(fmt(byName['Sample Type'],k))+'</button>'}).join('')+'</div>';
   var d=$('drawer');d.innerHTML=h;d.hidden=false;d.scrollTop=0;$('dc').focus()}
 
