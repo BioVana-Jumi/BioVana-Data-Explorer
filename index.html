@@ -168,7 +168,7 @@ td.na{color:var(--muted)}
 <script>
 (function(){
 var D,N,cols=[],byName={},sel={},rng={},txt={},Q='',unit='S',page=0,PS=25,sortCol=null,sortDir=1,blob=[],pidCol,catCol,sCat;
-var shown=['Sample ID','Study','Study Site','Disease Category','Sample Type','Sample Category','Sex','Age','Diagnosis','Ethnicity','Collection Date'];
+var shown=['Sample ID','Study','Study Site','Disease Category','Sample Type','Sample Category','Sex','Age','Diagnosis','Ethnicity'];
 var CATC={'Cancer':'--c-can','Cardiovascular':'--c-cvd','Metabolic':'--c-met','Autoimmune':'--c-aid','Neglected tropical disease':'--c-ntd','Vascular anomalies':'--c-vas','Infectious disease':'--c-inf'};
 var $=function(i){return document.getElementById(i)};
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -301,7 +301,7 @@ function histo(m){
   s+='</svg><div class="legend">'+cats.map(function(cn){return '<span><i style="background:var('+CATC[cn]+')"></i>'+esc(cn)+'</span>'}).join('')+'</div>';
   return '<div class="ch wide"><h3>Age and disease category<span>'+(unit==='P'?'participants':'samples')+' · '+n.toLocaleString()+' with a recorded age</span></h3>'+s+'</div>'}
 function charts(m){
-  $('charts').innerHTML=bars('Study','Study',m,6)+bars('Target organism','Target Organism',m,6)+bars('Disease category','Disease Category',m,6,function(l){return CATC[l]})+bars('Study site','Study Site',m,8)+bars('Sample type','Sample Type',m,10)+bars('Sex','Sex',m,3)+bars('Diagnosis','Diagnosis',m,10)+bars('Ethnicity','Ethnicity',m,10)+bars('ISSVA classification','ISSVA Classification',m,8)+bars('Anatomical site (tissue)','Anatomical Site',m,8)+histo(m)}
+  $('charts').innerHTML=bars('Study','Study',m,6)+bars('Target organism','Target Organism',m,6)+bars('Disease category','Disease Category',m,6,function(l){return CATC[l]})+bars('Study site','Study Site',m,8)+bars('Sample type','Sample Type',m,10)+bars('Sex','Sex',m,3)+bars('Diagnosis','Diagnosis',m,10)+bars('Ethnicity','Ethnicity',m,10)+bars('ISSVA classification','ISSVA Classification',m,8)+histo(m)}
 
 /* ---------- table ---------- */
 function visibleCols(){return cols.filter(function(c){return shown.indexOf(c.name)>=0})}
