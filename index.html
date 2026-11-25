@@ -1,0 +1,375 @@
+<meta charset="utf-8">
+<title>BioVana Data Explorer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700&display=swap">
+<style>
+/* Layout: navy masthead; sticky filter rail on the left; summary figures, linked charts and a record table on the right. */
+:root{
+  --bg:#F4F7F8; --surface:#FFFFFF; --ink:#1F3B4D; --muted:#566B7A; --line:#DAE3E8; --hover:#EAF2F4;
+  --hdr:#1F3B4D; --hdr-ink:#FFFFFF; --accent:#0E7C7B; --accent-soft:#D9F0EF; --accent-ink:#FFFFFF; --bar:#13A3A1;
+  --c-can:#D9503F; --c-cvd:#13A3A1; --c-met:#E39A22; --c-aid:#7A5AA6; --c-ntd:#5B7C99; --c-vas:#3B6FD4;
+  --warn-bg:#FFF4DE; --warn-ink:#6B4A00;
+  --font:"DM Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1A21; --surface:#15252F; --ink:#E5EEF2; --muted:#98ACB8; --line:#273C48; --hover:#1C313D;
+  --hdr:#12222B; --hdr-ink:#F2F7F9; --accent:#3CC9C6; --accent-soft:#16413F; --accent-ink:#06201F; --bar:#2FB9B6;
+  --c-can:#F0715F; --c-cvd:#3CC9C6; --c-met:#F2B04A; --c-aid:#A58AD0; --c-ntd:#8CA9C2; --c-vas:#6E9BF0;
+  --warn-bg:#3A2F12; --warn-ink:#F4D58D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1A21; --surface:#15252F; --ink:#E5EEF2; --muted:#98ACB8; --line:#273C48; --hover:#1C313D;
+  --hdr:#12222B; --hdr-ink:#F2F7F9; --accent:#3CC9C6; --accent-soft:#16413F; --accent-ink:#06201F; --bar:#2FB9B6;
+  --c-can:#F0715F; --c-cvd:#3CC9C6; --c-met:#F2B04A; --c-aid:#A58AD0; --c-ntd:#8CA9C2; --c-vas:#6E9BF0;
+  --warn-bg:#3A2F12; --warn-ink:#F4D58D; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.45}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mast{background:var(--hdr);color:var(--hdr-ink)}
+.mast-in{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1500px;margin:auto}
+.mast h1{font-size:22px;line-height:1.1;margin:0;font-weight:700;letter-spacing:-.01em}
+.mast p{margin:2px 0 0;opacity:.78;font-size:13px}
+.mast .sp{flex:1}
+.banner{background:var(--warn-bg);color:var(--warn-ink);font-size:13px}
+.banner div{padding:8px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));max-width:1500px;margin:auto}
+.wrap{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;max-width:1500px;margin:auto;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.rail{position:sticky;top:12px;align-self:start;max-height:calc(100vh - 24px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.rail-h{position:sticky;top:0;z-index:2;background:var(--surface);padding:12px 14px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.rail-h b{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+input[type=search],input[type=text],input[type=number],input[type=date]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;min-width:0}
+.grp{border-bottom:1px solid var(--line)}
+.grp>summary{list-style:none;cursor:pointer;padding:10px 14px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.grp>summary::-webkit-details-marker{display:none}
+.grp>summary::after{content:"+";color:var(--muted);font-weight:400;font-size:18px}
+.grp[open]>summary::after{content:"–"}
+.badge{background:var(--accent);color:var(--accent-ink);border-radius:10px;font-size:11px;padding:1px 7px;margin-left:8px;font-weight:700}
+.fac{padding:2px 14px 12px}
+.fac h4{margin:8px 0 4px;font-size:12px;color:var(--muted);font-weight:500;display:flex;justify-content:space-between}
+.opts label{display:flex;align-items:center;gap:8px;padding:3px 4px;border-radius:4px;cursor:pointer}
+.opts label:hover{background:var(--hover)}
+.opts label.zero{opacity:.45}
+.opts .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.opts .n{color:var(--muted);font-variant-numeric:tabular-nums;font-size:12px}
+.opts input{accent-color:var(--accent);margin:0}
+.more{background:none;border:0;color:var(--accent);padding:3px 4px;font-size:12px;text-decoration:underline}
+.rng{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:6px 12px}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);font-weight:700}
+.btn{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 12px}
+.btn:hover{background:var(--hover)}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip{display:inline-flex;gap:6px;align-items:center;background:var(--accent-soft);color:var(--ink);border:0;border-radius:14px;padding:3px 10px;font-size:12px}
+.chip b{font-weight:700}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:var(--surface);border:1px solid var(--line);border-radius:8px;margin-bottom:16px}
+.kpi{padding:14px 16px;border-left:1px solid var(--line);min-width:0}
+.kpi:first-child{border-left:0}
+.kpi .v{font-size:30px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.kpi .l{color:var(--muted);font-size:12px;margin-top:6px}
+.kpi .o{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:20px}
+.ch{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;min-width:0}
+.ch h3{margin:0 0 10px;font-size:14px;display:flex;justify-content:space-between;gap:8px}
+.ch h3 span{color:var(--muted);font-weight:400;font-size:12px}
+.ch.wide{grid-column:1/-1}
+.bars{display:flex;flex-direction:column;gap:5px}
+.bar{display:grid;grid-template-columns:minmax(80px,38%) 1fr 44px;align-items:center;gap:8px;border:0;background:none;padding:2px 4px;border-radius:4px;text-align:left;width:100%}
+.bar:hover{background:var(--hover)}
+.bar .l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.bar .tr{height:10px;background:var(--hover);border-radius:2px;overflow:hidden}
+.bar .f{height:100%;background:var(--bar);border-radius:0 3px 3px 0}
+.bar .v{text-align:right;font-variant-numeric:tabular-nums;font-size:13px}
+.bar.on{background:var(--accent-soft)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px}
+svg text{fill:var(--muted);font-family:var(--font);font-size:11px}
+.tablewrap{background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.th{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line)}
+.th h2{margin:0;font-size:16px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:700px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis}
+th{position:sticky;top:0;background:var(--surface);font-size:12px;color:var(--muted);font-weight:700;cursor:pointer;user-select:none}
+th[aria-sort]{color:var(--ink)}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--hover)}
+td.na{color:var(--muted)}
+.pg{display:flex;gap:10px;align-items:center;justify-content:flex-end;padding:10px 14px;color:var(--muted)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100vw);background:var(--surface);border-left:1px solid var(--line);box-shadow:-8px 0 30px rgba(0,0,0,.18);z-index:30;overflow:auto;padding:16px max(16px,env(safe-area-inset-right,0px)) 24px 18px;padding-top:calc(16px + env(safe-area-inset-top,0px))}
+.drawer h2{margin:0 0 2px;font-size:16px;word-break:break-all}
+.drawer dl{display:grid;grid-template-columns:130px 1fr;gap:4px 12px;margin:6px 0 14px}
+.drawer dt{color:var(--muted);font-size:12px}
+.drawer dd{margin:0;word-break:break-word}
+.drawer h3{margin:14px 0 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.close{float:right}
+.smp{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.smp button{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:2px 9px;font-size:12px}
+.tip{position:fixed;z-index:50;pointer-events:none;background:var(--ink);color:var(--bg);padding:5px 9px;border-radius:5px;font-size:12px;max-width:260px;display:none}
+.fbtn{display:none}
+.empty{padding:30px;text-align:center;color:var(--muted)}
+@media (max-width:900px){
+  .wrap{grid-template-columns:minmax(0,1fr)}
+  .fbtn{display:inline-block}
+  .rail{display:none;position:fixed;inset:0;z-index:25;max-height:none;border-radius:0}
+  body.fo .rail{display:block}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpi:nth-child(odd){border-left:0}
+  .kpi{border-top:1px solid var(--line)}
+  .kpi:nth-child(-n+2){border-top:0}
+  .bar{grid-template-columns:minmax(70px,40%) 1fr 40px}
+}
+@media (prefers-reduced-motion:no-preference){.f{transition:width .25s}}
+</style>
+
+<div class="mast"><div class="mast-in">
+  <div><h1>BioVana Data Explorer</h1><p>Browse the biospecimen and clinical variables available across BioVana studies: BioAtlas and PROS</p></div>
+  <span class="sp"></span>
+  <button class="btn fbtn" id="openF" style="background:var(--surface);color:var(--ink)">Filters</button>
+</div></div>
+<div class="banner"><div><b>Synthetic demonstration data.</b> Every record shown here is generated from the aggregate structure of the BioAtlas and PROS cohorts. None describes a real participant or sample. Use it to see which variables exist and how they can be combined, not for analysis.</div></div>
+
+<div class="wrap">
+  <aside class="rail" id="rail" aria-label="Filters">
+    <div class="rail-h">
+      <b>Filters</b>
+      <input type="search" id="q" placeholder="Search every field (e.g. breast, Hausa, FBC)">
+      <div style="display:flex;gap:8px"><button class="btn" id="clear">Clear all</button><button class="btn pri fbtn" id="closeF">Show results</button></div>
+    </div>
+    <div id="groups"></div>
+  </aside>
+
+  <main>
+    <div class="top">
+      <div class="seg" role="group" aria-label="Count by"><button id="uS" aria-pressed="true">Count samples</button><button id="uP" aria-pressed="false">Count participants</button></div>
+      <span style="color:var(--muted)" id="shown"></span>
+    </div>
+    <div class="chips" id="chips"></div>
+    <section class="kpis" id="kpis"></section>
+    <section class="charts" id="charts"></section>
+    <section class="tablewrap">
+      <div class="th"><h2>Records</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <details style="position:relative"><summary class="btn" style="list-style:none;display:inline-block">Columns</summary>
+            <div id="colpick" style="position:absolute;right:0;z-index:5;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 12px;width:260px;max-height:320px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.15)"></div></details>
+          <button class="btn" id="copy">Copy as CSV</button>
+        </div></div>
+      <div class="scroll"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+      <div class="pg"><button class="btn" id="prev">Previous</button><span id="pginfo"></span><button class="btn" id="next">Next</button></div>
+    </section>
+  </main>
+</div>
+<aside class="drawer" id="drawer" hidden aria-label="Record detail"></aside>
+<div class="tip" id="tip"></div>
+
+<script>
+(function(){
+var D,N,cols=[],byName={},sel={},rng={},txt={},Q='',unit='S',page=0,PS=25,sortCol=null,sortDir=1,blob=[],pidCol,catCol,sCat;
+var shown=['Sample ID','Study Site','Disease Category','Sample Type','Sample Category','Sex','Age','Diagnosis','Ethnicity','Collection Date'];
+var CATC={'Cancer':'--c-can','Cardiovascular':'--c-cvd','Metabolic':'--c-met','Autoimmune':'--c-aid','Neglected tropical disease':'--c-ntd','Vascular anomalies':'--c-vas'};
+var $=function(i){return document.getElementById(i)};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function dstr(d){return new Date(d*864e5).toISOString().slice(0,10)}
+function val(c,i){var v=c.v[i];if(c.kind==='cat')return v<0?null:c.dict[v];if(v===null)return null;if(c.kind==='date')return dstr(v);return v}
+function fmt(c,i){var v=val(c,i);return v===null?'':String(v)}
+
+fetch('data.json').then(function(r){return r.json()}).then(init).catch(function(e){$('kpis').innerHTML='<div class="empty">Could not load data.json ('+esc(e.message)+')</div>'});
+
+function init(d){
+  D=d;N=d.n;cols=d.cols;cols.forEach(function(c){byName[c.name]=c});
+  pidCol=byName['Participant ID'];catCol=byName['Disease Category'];sCat=byName['Sample Category'];
+  for(var i=0;i<N;i++){var s=[];for(var k=0;k<cols.length;k++){var t=fmt(cols[k],i);if(t)s.push(t)}blob.push(s.join('|').toLowerCase())}
+  buildRail();buildColPick();bind();update();
+}
+
+/* ---------- filtering ---------- */
+function passFilter(name,i){
+  var c=byName[name];
+  if(sel[name]){var v=c.v[i];return sel[name].has(v)}
+  if(rng[name]){var x=c.v[i];if(x===null)return false;var r=rng[name];return (r[0]===null||x>=r[0])&&(r[1]===null||x<=r[1])}
+  if(txt[name]){var s=c.v[i];return s!==null&&s.toLowerCase().indexOf(txt[name])>=0}
+  return true}
+function activeNames(){var a={};Object.keys(sel).forEach(function(k){a[k]=1});Object.keys(rng).forEach(function(k){a[k]=1});Object.keys(txt).forEach(function(k){a[k]=1});return Object.keys(a)}
+function mask(skip){
+  var act=activeNames().filter(function(n){return n!==skip}),m=new Uint8Array(N);
+  for(var i=0;i<N;i++){
+    if(Q&&blob[i].indexOf(Q)<0)continue;
+    var ok=true;for(var k=0;k<act.length;k++){if(!passFilter(act[k],i)){ok=false;break}}
+    m[i]=ok?1:0}
+  return m}
+function countCat(c,m){
+  var n=c.dict.length+1,out=new Array(n).fill(0),seen=unit==='P'?Array.from({length:n},function(){return new Set()}):null;
+  for(var i=0;i<N;i++){if(!m[i])continue;var v=c.v[i];var b=v<0?n-1:v;
+    if(seen){seen[b].add(pidCol.v[i])}else out[b]++}
+  if(seen)seen.forEach(function(s,i){out[i]=s.size});return out}
+
+/* ---------- sidebar ---------- */
+var facetRefs={};
+function buildRail(){
+  var G={},order=[];cols.forEach(function(c){if(c.name==='Synthetic Data')return;if(!G[c.group]){G[c.group]=[];order.push(c.group)}G[c.group].push(c)});
+  var root=$('groups');
+  order.forEach(function(g,gi){
+    var det=document.createElement('details');det.className='grp';if(gi<2)det.open=true;
+    det.innerHTML='<summary><span>'+esc(g)+'<span class="badge" hidden id="b-'+gi+'"></span></span></summary>';
+    var body=document.createElement('div');body.className='fac';det.appendChild(body);
+    G[g].forEach(function(c){body.appendChild(buildFacet(c,gi))});
+    root.appendChild(det)});
+}
+function buildFacet(c){
+  var w=document.createElement('div');w.dataset.col=c.name;
+  var h=document.createElement('h4');h.innerHTML='<span>'+esc(c.name)+'</span>';w.appendChild(h);
+  var ref={c:c,w:w,expanded:false};facetRefs[c.name]=ref;
+  if(c.kind==='cat'){
+    var box=document.createElement('div');box.className='opts';w.appendChild(box);ref.box=box;
+    ref.rows=[];
+    c.dict.concat(['(missing)']).forEach(function(lab,idx){
+      var code=idx===c.dict.length?-1:idx;
+      var l=document.createElement('label');l.title=lab;
+      l.innerHTML='<input type="checkbox"><span class="t">'+esc(lab)+'</span><span class="n"></span>';
+      var cb=l.firstChild;cb.addEventListener('change',function(){
+        var s=sel[c.name]||(sel[c.name]=new Set());if(cb.checked)s.add(code);else s.delete(code);if(!s.size)delete sel[c.name];page=0;update()});
+      box.appendChild(l);ref.rows.push({l:l,cb:cb,code:code,n:l.lastChild,hasMissing:code===-1});
+    });
+    if(c.dict.length>12){
+      var s=document.createElement('input');s.type='search';s.placeholder='Find in '+c.name;s.id='fs-'+c.name.replace(/\W/g,'');s.style.margin='4px 0';
+      s.addEventListener('input',function(){ref.find=s.value.toLowerCase();layoutFacet(ref)});w.insertBefore(s,box);
+      var m=document.createElement('button');m.className='more';m.addEventListener('click',function(){ref.expanded=!ref.expanded;layoutFacet(ref)});w.appendChild(m);ref.more=m}
+  } else if(c.kind==='num'||c.kind==='date'){
+    var vs=c.v.filter(function(x){return x!==null}),lo=Math.min.apply(null,vs),hi=Math.max.apply(null,vs);
+    var r=document.createElement('div');r.className='rng';var t=c.kind==='date'?'date':'number';
+    var id=c.name.replace(/\W/g,'');
+    r.innerHTML='<input type="'+t+'" id="lo-'+id+'" aria-label="'+esc(c.name)+' minimum" '+(t==='number'?'step="any" placeholder="min '+lo+'"':'min="'+dstr(lo)+'" max="'+dstr(hi)+'"')+'><input type="'+t+'" id="hi-'+id+'" aria-label="'+esc(c.name)+' maximum" '+(t==='number'?'step="any" placeholder="max '+hi+'"':'min="'+dstr(lo)+'" max="'+dstr(hi)+'"')+'>';
+    var ins=r.querySelectorAll('input');
+    var f=function(){var a=ins[0].value,b=ins[1].value,conv=function(x){return x===''?null:(c.kind==='date'?Date.parse(x)/864e5:parseFloat(x))};
+      var A=conv(a),B=conv(b);if(A===null&&B===null)delete rng[c.name];else rng[c.name]=[A,B];page=0;update()};
+    ins[0].addEventListener('input',f);ins[1].addEventListener('input',f);ref.ins=ins;w.appendChild(r);
+  } else {
+    var i=document.createElement('input');i.type='search';i.id='tx-'+c.name.replace(/\W/g,'');i.placeholder='Contains…';i.setAttribute('aria-label',c.name);
+    i.addEventListener('input',function(){var v=i.value.trim().toLowerCase();if(v)txt[c.name]=v;else delete txt[c.name];page=0;update()});ref.ins=[i];w.appendChild(i)}
+  return w}
+function layoutFacet(ref){
+  var c=ref.c,rows=ref.rows,vis=0,limit=ref.expanded||ref.find?9999:10,total=0;
+  rows.forEach(function(r){
+    var lab=r.l.title.toLowerCase(),match=!ref.find||lab.indexOf(ref.find)>=0;
+    var keep=r.cb.checked||(match&&(r.count>0||!ref.hideZero));
+    if(r.hasMissing&&r.count===0&&!r.cb.checked)keep=false;
+    if(keep)total++;
+    var show=keep&&(vis<limit||r.cb.checked);if(show)vis++;r.l.hidden=!show});
+  if(ref.more){ref.more.hidden=total<=10||!!ref.find;ref.more.textContent=ref.expanded?'Show fewer':'Show all '+total}}
+function updateFacets(){
+  Object.keys(facetRefs).forEach(function(n){var ref=facetRefs[n],c=ref.c;
+    if(c.kind!=='cat')return;
+    var cnt=countCat(c,mask(n));
+    ref.rows.forEach(function(r,i){var k=r.code===-1?cnt.length-1:r.code;r.count=cnt[k];r.n.textContent=r.count.toLocaleString();r.l.classList.toggle('zero',r.count===0);r.cb.checked=!!(sel[n]&&sel[n].has(r.code))});
+    layoutFacet(ref)});
+  document.querySelectorAll('.grp').forEach(function(g,gi){var k=0;g.querySelectorAll('[data-col]').forEach(function(w){var n=w.dataset.col;if(sel[n]||rng[n]||txt[n])k++});
+    var b=g.querySelector('.badge');b.hidden=!k;b.textContent=k})}
+
+/* ---------- summary ---------- */
+function kpis(m){
+  var all=new Set(),cur=new Set(),prim=0,der=0,sites=new Set(),tot=N,pAll=new Set(pidCol.v),pc=sCat.dict.indexOf('Primary');
+  var site=byName['Study Site'];
+  for(var i=0;i<N;i++){if(!m[i])continue;cur.add(pidCol.v[i]);sites.add(site.v[i]);if(sCat.v[i]===pc)prim++;else der++}
+  var items=[['Participants',cur.size,'of '+pAll.size.toLocaleString()],['Samples',prim+der,'of '+N.toLocaleString()],['Primary samples',prim,'blood, urine, saliva, tissue and others'],['Derived samples',der,'plasma and serum aliquots'],['Sites',sites.size,'of '+site.dict.length]];
+  $('kpis').innerHTML=items.map(function(x){return '<div class="kpi"><div class="v">'+x[1].toLocaleString()+'</div><div class="l">'+x[0]+'</div><div class="o">'+x[2]+'</div></div>'}).join('');
+  $('shown').textContent=(prim+der).toLocaleString()+' samples from '+cur.size.toLocaleString()+' participants match'}
+function counts(name,m){var c=byName[name],a=countCat(c,m);return c.dict.map(function(l,i){return{label:l,count:a[i],code:i}}).filter(function(x){return x.count>0}).sort(function(a,b){return b.count-a.count})}
+function bars(title,name,m,limit,colorFn){
+  var c=byName[name],items=counts(name,m).slice(0,limit),max=items.length?items[0].count:1;
+  if(!items.length)return '';
+  var html='<div class="ch"><h3>'+esc(title)+'<span>'+(unit==='P'?'participants':'samples')+'</span></h3><div class="bars">';
+  html+=items.map(function(x){var on=sel[name]&&sel[name].has(x.code);var col=colorFn?'var('+colorFn(x.label)+')':'';
+    return '<button class="bar'+(on?' on':'')+'" data-f="'+esc(name)+'" data-c="'+x.code+'" data-tip="'+esc(x.label)+': '+x.count.toLocaleString()+' (click to filter)"><span class="l">'+(colorFn?'<i class="dot" style="background:'+col+'"></i>':'')+esc(x.label)+'</span><span class="tr"><span class="f" style="display:block;width:'+(x.count/max*100)+'%;'+(col?'background:'+col:'')+'"></span></span><span class="v">'+x.count.toLocaleString()+'</span></button>'}).join('');
+  if(!items.length)html+='<div class="empty">No records match</div>';
+  return html+'</div></div>'}
+function histo(m){
+  var age=byName['Age'],bins=[[0,17],[18,29],[30,39],[40,49],[50,59],[60,69],[70,79],[80,120]],cats=catCol.dict,grid=bins.map(function(){return cats.map(function(){return unit==='P'?new Set():0})}),n=0;
+  for(var i=0;i<N;i++){if(!m[i]||age.v[i]===null)continue;var a=age.v[i],b=bins.findIndex(function(x){return a>=x[0]&&a<=x[1]});if(b<0)continue;var k=catCol.v[i];if(k<0)continue;n++;
+    if(unit==='P')grid[b][k].add(pidCol.v[i]);else grid[b][k]++}
+  var tot=grid.map(function(r){return r.map(function(x){return unit==='P'?x.size:x})}),sums=tot.map(function(r){return r.reduce(function(a,b){return a+b},0)}),max=Math.max.apply(null,sums.concat([1]));
+  var step=Math.pow(10,Math.floor(Math.log10(max)));var top=Math.ceil(max/step)*step;if(top/step<2)top=step*2;
+  var W=560,H=210,L=36,B=26,T=8,pw=(W-L-6)/bins.length,bw=pw*.62,sy=function(v){return H-B-(H-B-T)*v/top};
+  var s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Age distribution stacked by disease category">';
+  [0,.5,1].forEach(function(f){var v=top*f,y=sy(v);s+='<line x1="'+L+'" x2="'+W+'" y1="'+y+'" y2="'+y+'" stroke="var(--line)"/><text x="'+(L-6)+'" y="'+(y+4)+'" text-anchor="end">'+Math.round(v).toLocaleString()+'</text>'});
+  bins.forEach(function(b,bi){var x=L+bi*pw+(pw-bw)/2,acc=0;
+    cats.forEach(function(cn,k){var v=tot[bi][k];if(!v)return;var y0=sy(acc),y1=sy(acc+v);acc+=v;
+      s+='<rect x="'+x+'" y="'+y1+'" width="'+bw+'" height="'+Math.max(0,y0-y1-1.5)+'" fill="var('+CATC[cn]+')" data-tip="'+cn+', ages '+b[0]+(b[1]>100?'+':'–'+b[1])+': '+v.toLocaleString()+'"/>'});
+    s+='<text x="'+(x+bw/2)+'" y="'+(H-8)+'" text-anchor="middle">'+b[0]+(b[1]>100?'+':'–'+b[1])+'</text>'});
+  s+='</svg><div class="legend">'+cats.map(function(cn){return '<span><i style="background:var('+CATC[cn]+')"></i>'+esc(cn)+'</span>'}).join('')+'</div>';
+  return '<div class="ch wide"><h3>Age and disease category<span>'+(unit==='P'?'participants':'samples')+' · '+n.toLocaleString()+' with a recorded age</span></h3>'+s+'</div>'}
+function charts(m){
+  $('charts').innerHTML=bars('Study','Study',m,6)+bars('Disease category','Disease Category',m,6,function(l){return CATC[l]})+bars('Study site','Study Site',m,8)+bars('Sample type','Sample Type',m,10)+bars('Sex','Sex',m,3)+bars('Diagnosis','Diagnosis',m,10)+bars('Ethnicity','Ethnicity',m,10)+bars('ISSVA classification','ISSVA Classification',m,8)+bars('Anatomical site (tissue)','Anatomical Site',m,8)+histo(m)}
+
+/* ---------- table ---------- */
+function visibleCols(){return cols.filter(function(c){return shown.indexOf(c.name)>=0})}
+function buildColPick(){
+  $('colpick').innerHTML=cols.map(function(c,i){return '<label style="display:flex;gap:8px;padding:3px 0"><input type="checkbox" data-cp="'+esc(c.name)+'" '+(shown.indexOf(c.name)>=0?'checked':'')+'>'+esc(c.name)+'</label>'}).join('');
+  $('colpick').addEventListener('change',function(e){var n=e.target.dataset.cp;if(!n)return;
+    shown=cols.map(function(c){return c.name}).filter(function(x){var cb=$('colpick').querySelector('[data-cp="'+x.replace(/"/g,'\\"')+'"]');return cb.checked});renderTable()})}
+var lastM;
+function renderTable(){
+  var m=lastM,vc=visibleCols(),idx=[];
+  for(var i=0;i<N;i++)if(m[i])idx.push(i);
+  if(sortCol){var c=byName[sortCol];idx.sort(function(a,b){var x=val(c,a),y=val(c,b);if(x===null&&y===null)return 0;if(x===null)return 1;if(y===null)return -1;return (x<y?-1:x>y?1:0)*sortDir})}
+  var pages=Math.max(1,Math.ceil(idx.length/PS));if(page>=pages)page=pages-1;
+  $('thead').innerHTML='<tr>'+vc.map(function(c){return '<th data-s="'+esc(c.name)+'"'+(sortCol===c.name?' aria-sort="'+(sortDir>0?'ascending':'descending')+'"':'')+'>'+esc(c.name)+(sortCol===c.name?(sortDir>0?' ▲':' ▼'):'')+'</th>'}).join('')+'</tr>';
+  var rows=idx.slice(page*PS,page*PS+PS);
+  $('tbody').innerHTML=rows.length?rows.map(function(i){return '<tr data-r="'+i+'">'+vc.map(function(c){var v=val(c,i);
+    if(v===null)return '<td class="na">–</td>';
+    if(c.name==='Disease Category')return '<td><i class="dot" style="background:var('+CATC[v]+')"></i>'+esc(v)+'</td>';
+    return '<td title="'+esc(v)+'">'+esc(v)+'</td>'}).join('')+'</tr>'}).join(''):'<tr><td colspan="'+vc.length+'" class="empty">No records match these filters.</td></tr>';
+  $('pginfo').textContent=idx.length?((page*PS+1)+'–'+Math.min(idx.length,page*PS+PS)+' of '+idx.length.toLocaleString()):'0 records';
+  $('prev').disabled=page===0;$('next').disabled=page>=pages-1;
+  lastIdx=idx}
+var lastIdx=[];
+
+/* ---------- chips ---------- */
+function chips(){
+  var out=[];
+  if(Q)out.push(['Search: '+Q,function(){Q='';$('q').value=''}]);
+  Object.keys(sel).forEach(function(n){var c=byName[n];sel[n].forEach(function(code){out.push([n+': '+(code<0?'(missing)':c.dict[code]),function(){sel[n].delete(code);if(!sel[n].size)delete sel[n]}])})});
+  Object.keys(rng).forEach(function(n){var c=byName[n],r=rng[n],f=function(x){return x===null?'…':(c.kind==='date'?dstr(x):x)};out.push([n+': '+f(r[0])+' to '+f(r[1]),function(){delete rng[n];facetRefs[n].ins.forEach(function(i){i.value=''})}])});
+  Object.keys(txt).forEach(function(n){out.push([n+' contains '+txt[n],function(){delete txt[n];facetRefs[n].ins[0].value=''}])});
+  $('chips').innerHTML=out.map(function(x,i){return '<button class="chip" data-x="'+i+'" aria-label="Remove filter '+esc(x[0])+'"><b>'+esc(x[0])+'</b> ×</button>'}).join('');
+  $('chips').onclick=function(e){var b=e.target.closest('.chip');if(!b)return;out[+b.dataset.x][1]();page=0;update()}}
+
+function update(){
+  lastM=mask(null);chips();kpis(lastM);charts(lastM);updateFacets();renderTable()}
+
+/* ---------- detail drawer ---------- */
+function openRec(i){
+  var g={},order=[];cols.forEach(function(c){if(!g[c.group]){g[c.group]=[];order.push(c.group)}g[c.group].push(c)});
+  var pid=pidCol.v[i],sibs=[];for(var k=0;k<N;k++)if(pidCol.v[k]===pid)sibs.push(k);
+  var h='<button class="btn close" id="dc">Close</button><h2>'+esc(fmt(byName['Sample ID'],i))+'</h2><div style="color:var(--muted)">'+esc(fmt(byName['Sample Type'],i))+' · '+esc(fmt(byName['Sample Category'],i))+' · '+esc(fmt(byName['Study Site'],i))+'</div>';
+  order.forEach(function(gn){h+='<h3>'+esc(gn)+'</h3><dl>'+g[gn].map(function(c){var v=fmt(c,i);return '<dt>'+esc(c.name)+'</dt><dd>'+(v?esc(v):'<span style="color:var(--muted)">–</span>')+'</dd>'}).join('')+'</dl>'});
+  h+='<h3>All samples from this participant ('+sibs.length+')</h3><div class="smp">'+sibs.map(function(k){return '<button data-o="'+k+'">'+esc(fmt(byName['Sample ID'],k).split('_').slice(-1)[0])+' · '+esc(fmt(byName['Sample Type'],k))+'</button>'}).join('')+'</div>';
+  var d=$('drawer');d.innerHTML=h;d.hidden=false;d.scrollTop=0;$('dc').focus()}
+
+/* ---------- events ---------- */
+function bind(){
+  $('q').addEventListener('input',function(){Q=this.value.trim().toLowerCase();page=0;update()});
+  $('clear').onclick=function(){sel={};rng={};txt={};Q='';$('q').value='';document.querySelectorAll('.rail input[type=search],.rail input[type=number],.rail input[type=date]').forEach(function(i){i.value=''});page=0;update()};
+  $('uS').onclick=function(){unit='S';$('uS').setAttribute('aria-pressed',true);$('uP').setAttribute('aria-pressed',false);update()};
+  $('uP').onclick=function(){unit='P';$('uP').setAttribute('aria-pressed',true);$('uS').setAttribute('aria-pressed',false);update()};
+  $('prev').onclick=function(){page--;renderTable()};$('next').onclick=function(){page++;renderTable()};
+  $('thead').addEventListener('click',function(e){var t=e.target.closest('th');if(!t)return;var n=t.dataset.s;if(sortCol===n)sortDir=-sortDir;else{sortCol=n;sortDir=1}renderTable()});
+  $('tbody').addEventListener('click',function(e){var r=e.target.closest('tr');if(r&&r.dataset.r)openRec(+r.dataset.r)});
+  $('drawer').addEventListener('click',function(e){if(e.target.id==='dc')$('drawer').hidden=true;var o=e.target.closest('[data-o]');if(o)openRec(+o.dataset.o)});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')$('drawer').hidden=true});
+  $('charts').addEventListener('click',function(e){var b=e.target.closest('.bar');if(!b)return;var n=b.dataset.f,code=+b.dataset.c,s=sel[n]||(sel[n]=new Set());if(s.has(code))s.delete(code);else s.add(code);if(!s.size)delete sel[n];page=0;update()});
+  $('openF').onclick=function(){document.body.classList.add('fo')};$('closeF').onclick=function(){document.body.classList.remove('fo')};
+  $('copy').onclick=function(){
+    var vc=cols.filter(function(c){return c.name!=='Synthetic Data'}),q=function(s){s=String(s);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
+    var csv=[vc.map(function(c){return q(c.name)}).join(',')].concat(lastIdx.map(function(i){return vc.map(function(c){return q(fmt(c,i))}).join(',')})).join('\n');
+    var done=function(){$('copy').textContent='Copied '+lastIdx.length.toLocaleString()+' rows';setTimeout(function(){$('copy').textContent='Copy as CSV'},2000)};
+    var fb=function(){var t=document.createElement('textarea');t.value=csv;document.body.appendChild(t);t.select();try{document.execCommand('copy');done()}catch(x){}t.remove()};
+    try{navigator.clipboard.writeText(csv).then(done,fb)}catch(x){fb()}};
+  var tip=$('tip');
+  document.addEventListener('mouseover',function(e){var t=e.target.closest('[data-tip]');if(!t){tip.style.display='none';return}tip.textContent=t.dataset.tip;tip.style.display='block'});
+  document.addEventListener('mousemove',function(e){if(tip.style.display==='block'){tip.style.left=Math.min(e.clientX+12,innerWidth-270)+'px';tip.style.top=(e.clientY+14)+'px'}});
+}
+})();
+</script>
